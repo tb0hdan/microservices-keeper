@@ -1,13 +1,10 @@
 package main
 
 import (
-    "flag"
-    "fmt"
+	keeper "github.com/tb0hdan/microservices-keeper/repository"
 )
 
-var dir = flag.String("dir", ".", "Directory to publish")
 
 func main() {
-    flag.Parse()
-    fmt.Println(*dir)
+	keeper.Run()
 }
