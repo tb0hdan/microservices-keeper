@@ -37,3 +37,4 @@ See: https://github.com/golang/go/issues/26894
 About
 ------------
 Loosely based on http://thinkrelevance.com/blog/2011/11/15/documenting-architecture-decisions
+and https://github.com/npryce/adr-tools
