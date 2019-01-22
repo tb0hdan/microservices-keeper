@@ -9,10 +9,14 @@ import (
 	"time"
 )
 
-type CCD struct {
+const (
+	MAX_CCD_WORDS = 8
+)
+
+type cCD struct {
 }
 
-func (c *CCD) readACCDs(directory string) (ccds []string) {
+func (c *cCD) ReadCCDs(directory string) (ccds []string) {
 	files, err := ioutil.ReadDir(directory)
 	if err != nil {
 		log.Fatal(err)
@@ -26,7 +30,7 @@ func (c *CCD) readACCDs(directory string) (ccds []string) {
 	return
 }
 
-func (c *CCD) createCCD(text, dpath string) (name string, err error) {
+func (c *cCD) CreateCCD(text, dpath string) (name string, err error) {
 	var (
 		words []string
 	)
@@ -36,7 +40,7 @@ func (c *CCD) createCCD(text, dpath string) (name string, err error) {
 		}
 	}
 	last_ccd_id := int64(0)
-	ccds := c.readACCDs(dpath)
+	ccds := c.ReadCCDs(dpath)
 	if len(ccds) > 0 {
 		last_ccd := ccds[len(ccds)-1]
 
@@ -51,10 +55,15 @@ func (c *CCD) createCCD(text, dpath string) (name string, err error) {
 	return
 }
 
-func (c *CCD) writeToCCD(text, filename string) error {
+func (c *cCD) WriteToCCD(text, filename string) error {
 	currentTime := time.Now()
 	date := currentTime.Format("2006-01-02")
 	template := fmt.Sprintf("Date: %s\n", date)
 	template += "## Decision\n" + text
 	return ioutil.WriteFile(filename, []byte(template), 0644)
+}
+
+func NewCCD() (ccd *cCD) {
+	ccd = &cCD{}
+	return
 }
