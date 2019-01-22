@@ -1,5 +1,5 @@
 *microservices-keeper* is a tool to keep track of Code Change Decisions [CCD] as part of microservices maintenance.
-I've coined up this term after reading Michael Nygard's article - see (About)[#about].
+I've coined up this term after reading Michael Nygard's article - see [About](#about).
 Basically, it's works with git repository as a form of centralized storage,
 where all necessary changes get committed so the developer can walk through
 the list and confirm that code edits have been made. Work in progress.
