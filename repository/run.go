@@ -28,7 +28,7 @@ func RunWithAbstractGit(mygit GitInterface, myccd CCDInterface, configuration Co
 
 	// Clone here
 	err := mygit.Clone()
-	if err != nil {
+	if err != nil && err.Error() != "repository already exists"{
 		log.Fatalf("an error occured while running mygit.Clone(): %+v\n", err)
 	}
 
@@ -61,7 +61,7 @@ func RunWithAbstractGit(mygit GitInterface, myccd CCDInterface, configuration Co
 	}
 
 	err = mygit.PullAll()
-	if err != nil {
+	if err != nil && err.Error() != "already up-to-date"{
 		log.Fatalf("an error occured while running mygit.PullAll(): %+v\n", err)
 	}
 	err = mygit.AddAllFiles()

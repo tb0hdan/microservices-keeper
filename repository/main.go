@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"os/user"
+	"path"
 
 	log "github.com/sirupsen/logrus" // nolint
 )
@@ -17,15 +18,26 @@ var (
 	url       = flag.String("url", "", "CCD repository URL")
 	gitUser   = flag.String("gituser", "", "Git user. Defaults to currently logged in one.")
 	message   = flag.String("message", "", "Message to add. Ignored when pipe is used.")
+	version   = flag.Bool("version", false, "Print version")
 )
 
-func Run() { // nolint
+func Run(bversion, buildID string) { // nolint
 	var (
 		err error
 		usr *user.User
 	)
+	// Flags are parsed inside NewConfiguration()
 	configuration := NewConfiguration()
 	configuration.Init(flag.CommandLine)
+
+	if *version {
+		sname := path.Base(os.Args[0])
+		if sname == "main" {
+			sname = "microservices-keeper"
+		}
+		fmt.Printf("%s version %s-%s\n", sname, bversion, buildID)
+		os.Exit(1)
+	}
 
 	*directory, _ = configuration.Get("directory")
 
@@ -76,6 +88,10 @@ func Run() { // nolint
 			output = append(output, input)
 		}
 		*message = string(output)
+	}
+
+	if *message == "" {
+		log.Fatal("Cannot run with empty message")
 	}
 
 	msgfunc := func() (string, error) {

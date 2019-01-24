@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	keeper.Run()
+	keeper.Run(Version, BuildID)
 }
