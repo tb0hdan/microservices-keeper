@@ -22,13 +22,15 @@ type CCDInterface interface {
 	WriteToCCD(text, filename string) error
 }
 
-func RunWithAbstractGit(mygit GitInterface, myccd CCDInterface, configuration Configuration) {
+func RunWithAbstractGit(mygit GitInterface, myccd CCDInterface, configuration Configuration, msgfunc func() (string, error)) {
 	// Configure git instance
 	mygit.SetConfiguration(configuration)
 
 	// Clone here
-	mygit.Clone()
-
+	err := mygit.Clone()
+	if err != nil {
+		log.Fatalf("an error occured while running mygit.Clone(): %+v\n", err)
+	}
 
 	branches, err := mygit.GetBranches()
 	if err != nil {
@@ -44,16 +46,31 @@ func RunWithAbstractGit(mygit GitInterface, myccd CCDInterface, configuration Co
 	ensureDir(ccdPath)
 	ensureDir(reportPath)
 
-	text := "We\nHave\nDecided\nTo have some serious fun tomorrow.\nWe'll build a rocket!\n"
+	text, err := msgfunc()
+	if err != nil {
+		log.Fatalf("an error occured while getting message: %+v\n", err)
+	}
 
 	fname, err := myccd.CreateCCD(text, ccdPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 	err = myccd.WriteToCCD(text, path.Join(ccdPath, fname))
+	if err != nil {
+		log.Fatalf("an error occured while writing CCD: %+v\n", err)
+	}
 
-	mygit.PullAll()
-	mygit.AddAllFiles()
-	mygit.CommitAll()
+	err = mygit.PullAll()
+	if err != nil {
+		log.Fatalf("an error occured while running mygit.PullAll(): %+v\n", err)
+	}
+	err = mygit.AddAllFiles()
+	if err != nil {
+		log.Fatalf("an error occured while running mygit.AddAllFiles(): %+v\n", err)
+	}
+	err = mygit.CommitAll()
+	if err != nil {
+		log.Fatalf("an error occured while running mygit.CommitAll(): %+v\n", err)
+	}
 	mygit.Push()
 }

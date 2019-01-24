@@ -3,20 +3,22 @@ package repository
 import (
 	"fmt"
 	"io/ioutil"
-	log "github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus" // nolint
 )
 
 const (
-	MAX_CCD_WORDS = 8
+	MaxCCDWords  = 8
+	CCDSeparator = "-"
 )
 
-type cCD struct {
+type CCD struct {
 }
 
-func (c *cCD) ReadCCDs(directory string) (ccds []string) {
+func (c *CCD) ReadCCDs(directory string) (ccds []string) {
 	files, err := ioutil.ReadDir(directory)
 	if err != nil {
 		log.Fatal(err)
@@ -30,7 +32,7 @@ func (c *cCD) ReadCCDs(directory string) (ccds []string) {
 	return
 }
 
-func (c *cCD) CreateCCD(text, dpath string) (name string, err error) {
+func (c *CCD) CreateCCD(text, dpath string) (name string, err error) {
 	var (
 		words []string
 	)
@@ -39,23 +41,29 @@ func (c *cCD) CreateCCD(text, dpath string) (name string, err error) {
 			words = append(words, strings.ToLower(word))
 		}
 	}
-	last_ccd_id := int64(0)
+	lastCCDID := int64(0)
 	ccds := c.ReadCCDs(dpath)
 	if len(ccds) > 0 {
-		last_ccd := ccds[len(ccds)-1]
+		lastCCD := ccds[len(ccds)-1]
 
-		last_ccd_id, err = strconv.ParseInt(strings.Split(last_ccd, "-")[0], 10, 64)
+		lastCCDID, err = strconv.ParseInt(strings.Split(lastCCD, "-")[0], 10, 64)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
+	maxWords := len(words)
+
+	if len(words) >= MaxCCDWords {
+		maxWords = MaxCCDWords
+	}
 
 	// 6 zeroes
-	name = fmt.Sprintf("%06d-", last_ccd_id+1) + strings.Join(words[:MAX_CCD_WORDS], "-") + ".md"
+	name = strings.TrimRight(fmt.Sprintf("%06d%s", lastCCDID+1, CCDSeparator)+strings.Join(words[:maxWords],
+		CCDSeparator), CCDSeparator) + ".md"
 	return
 }
 
-func (c *cCD) WriteToCCD(text, filename string) error {
+func (c *CCD) WriteToCCD(text, filename string) error {
 	currentTime := time.Now()
 	date := currentTime.Format("2006-01-02")
 	template := fmt.Sprintf("Date: %s\n", date)
@@ -63,7 +71,7 @@ func (c *cCD) WriteToCCD(text, filename string) error {
 	return ioutil.WriteFile(filename, []byte(template), 0644)
 }
 
-func NewCCD() (ccd *cCD) {
-	ccd = &cCD{}
+func NewCCD() (ccd *CCD) {
+	ccd = &CCD{}
 	return
 }

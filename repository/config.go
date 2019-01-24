@@ -2,11 +2,12 @@ package repository
 
 import (
 	"flag"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 	"log"
 	"os"
 	"os/user"
+
+	"github.com/spf13/pflag"
+	"github.com/spf13/viper"
 )
 
 type Configuration interface {
@@ -14,12 +15,10 @@ type Configuration interface {
 	Init(set *flag.FlagSet)
 }
 
-
-type viperConfiguration struct {
-
+type ViperConfiguration struct {
 }
 
-func (vc *viperConfiguration) setDefaults() {
+func (vc *ViperConfiguration) setDefaults() {
 	usr, err := user.Current()
 	if err != nil {
 		log.Fatalf("setDefaults: %+v\n", err)
@@ -29,22 +28,25 @@ func (vc *viperConfiguration) setDefaults() {
 		log.Fatalf("setDefaults: %+v\n", err)
 	}
 	viper.SetDefault("name", "Mr. Keeper")
-	viper.SetDefault("email", usr.Name + "@" + hostname)
+	viper.SetDefault("email", usr.Name+"@"+hostname)
 }
 
-func (vc *viperConfiguration) Init(cmd *flag.FlagSet) {
+func (vc *ViperConfiguration) Init(cmd *flag.FlagSet) {
 	vc.setDefaults()
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
 	pflag.Parse()
-	viper.BindPFlags(pflag.CommandLine)
+	err := viper.BindPFlags(pflag.CommandLine)
+	if err != nil {
+		log.Fatalf("an error occured while running viper.BindPFlags(): %+v\n", err)
+	}
 }
 
-func (vc *viperConfiguration) Get(param string) (string, error) {
-	return 	viper.GetString(param), nil
+func (vc *ViperConfiguration) Get(param string) (string, error) {
+	return viper.GetString(param), nil
 }
 
-func NewConfiguration() (cfg *viperConfiguration){
-	cfg = &viperConfiguration{}
+func NewConfiguration() (cfg *ViperConfiguration) {
+	cfg = &ViperConfiguration{}
 	return
 
 }

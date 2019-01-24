@@ -4,22 +4,20 @@ import (
 	"log"
 	"time"
 
+	"gopkg.in/src-d/go-git.v4" // nolint
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
-
-	"gopkg.in/src-d/go-git.v4"
 	gitssh "gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
 
 type GoGit struct {
-	Directory  string
-	URL        string
-	pk         *gitssh.PublicKeys
-	r          *git.Repository
-	w          *git.Worktree
-	SSHKeyPath string
+	Directory     string
+	URL           string
+	pk            *gitssh.PublicKeys
+	r             *git.Repository
+	w             *git.Worktree
+	SSHKeyPath    string
 	Configuration Configuration
 }
-
 
 func (gg *GoGit) SetConfiguration(configuration Configuration) {
 	gg.Configuration = configuration
@@ -62,7 +60,7 @@ func (gg *GoGit) Push() {
 		Auth:       gg.pk,
 	}
 
-	err = gg.r.Push(po)
+	err := gg.r.Push(po)
 	log.Println(err)
 }
 
@@ -72,7 +70,7 @@ func (gg *GoGit) GetRepository() *git.Repository {
 }
 
 //PrepareWorkTree
-func (gg *GoGit) PrepareWorkTree() error {
+func (gg *GoGit) PrepareWorkTree() (err error) {
 	gg.w, err = gg.r.Worktree()
 	if err != nil {
 		log.Println("PrepareWorkTree", err)
@@ -87,8 +85,17 @@ func (gg *GoGit) GetWorkTree() *git.Worktree {
 
 //CommitAll
 func (gg *GoGit) CommitAll() error {
+	var (
+		err error
+	)
 	name, err := gg.Configuration.Get("name")
+	if err != nil {
+		log.Fatalf("Could not get committer name: %+v\n", err)
+	}
 	email, err := gg.Configuration.Get("email")
+	if err != nil {
+		log.Fatalf("Could not get committer email: %+v\n", err)
+	}
 	commit, err := gg.w.Commit("CCD update", &git.CommitOptions{
 		Author: &object.Signature{
 			Name:  name,
@@ -96,10 +103,12 @@ func (gg *GoGit) CommitAll() error {
 			When:  time.Now(),
 		},
 	})
-
+	if err != nil {
+		log.Fatalf("Could not run Commit(): %+v\n", err)
+	}
 	obj, err := gg.r.CommitObject(commit)
 	if err != nil {
-		log.Fatal("CommitAll", err)
+		log.Fatalf("Could not run CommitObject: %+v\n", err)
 	}
 
 	log.Println(obj)
@@ -123,7 +132,7 @@ func (gg *GoGit) AddAllFiles() error {
 }
 
 //PullAll
-func (gg *GoGit) PullAll() error {
+func (gg *GoGit) PullAll() (err error) {
 	err = gg.w.Pull(&git.PullOptions{RemoteName: "origin", Auth: gg.pk})
 	if err != nil {
 		log.Println("PullAll", err)
@@ -145,14 +154,16 @@ func (gg *GoGit) GetBranches() (branches []string, err error) {
 }
 
 //NewGit
-func NewGit(url, directory, ssh_key string) (ggn *GoGit) {
-	ggn = &GoGit{URL: url, Directory: directory, SSHKeyPath: ssh_key}
+func NewGit(url, directory, sshKey string) (ggn *GoGit) {
+	var (
+		err error
+	)
+	ggn = &GoGit{URL: url, Directory: directory, SSHKeyPath: sshKey}
 
 	err = ggn.Auth()
 	if err != nil {
 		log.Fatalf("Auth: %+v\n", err)
 	}
-
 
 	pull := false
 	err = ggn.Clone()
@@ -169,7 +180,6 @@ func NewGit(url, directory, ssh_key string) (ggn *GoGit) {
 		log.Fatalf("Open: %+v\n", err)
 	}
 
-
 	err = ggn.PrepareWorkTree()
 	if err != nil {
 		log.Fatalf("PrepareWorkTree: %+v\n", err)
@@ -178,8 +188,8 @@ func NewGit(url, directory, ssh_key string) (ggn *GoGit) {
 	if pull {
 		err = ggn.PullAll()
 		if err != nil {
-			log.Println("PullAll: %+v\n", err)
+			log.Printf("PullAll: %+v\n", err)
 		}
 	}
-	return
+	return ggn
 }

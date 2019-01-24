@@ -24,7 +24,13 @@ microservices-keeper -help
 Example CLI usage:
 
 ```sh
-microservices-keeper bla-bla
+microservices-keeper --message "we have decided to write some tests" --gituser yourGithubUser
+```
+
+or
+
+```sh
+cat somebigmessage.txt|microservices-keeper --gituser yourGithubUser
 ```
 
 Development
@@ -41,5 +47,7 @@ See: https://github.com/golang/go/issues/26894
 
 About
 ------------
-Loosely based on http://thinkrelevance.com/blog/2011/11/15/documenting-architecture-decisions
-and https://github.com/npryce/adr-tools
+Loosely based on following:
+- http://thinkrelevance.com/blog/2011/11/15/documenting-architecture-decisions
+- https://github.com/npryce/adr-tools
+
