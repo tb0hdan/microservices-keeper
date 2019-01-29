@@ -1,6 +1,6 @@
 package main
 
 const (
-	Version = "0.0.1"
-	BuildID = "bc2d70d"
+	Version="0.0.2"
+	BuildID="37109ca"
 )
