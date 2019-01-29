@@ -1,4 +1,4 @@
-package repository
+package utils
 
 import (
 	"os"
@@ -10,7 +10,7 @@ import (
 	log "github.com/sirupsen/logrus" // nolint
 )
 
-func ensureDir(name string) {
+func EnsureDir(name string) {
 	_, err := os.Open(name)
 	if os.IsNotExist(err) {
 		log.Println("Making dir", name)
@@ -21,7 +21,7 @@ func ensureDir(name string) {
 	}
 }
 
-func findSSHKey() (sshPath string, err error) {
+func FindSSHKey() (sshPath string, err error) {
 	cuser, err := user.Current()
 	if err != nil {
 		return

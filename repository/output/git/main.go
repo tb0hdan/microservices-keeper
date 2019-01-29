@@ -1,4 +1,4 @@
-package repository
+package git
 
 import (
 	"log"
@@ -7,6 +7,8 @@ import (
 	"gopkg.in/src-d/go-git.v4" // nolint
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	gitssh "gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
+
+	cfg "github.com/tb0hdan/microservices-keeper/repository/configuration"
 )
 
 type GoGit struct {
@@ -16,10 +18,10 @@ type GoGit struct {
 	r             *git.Repository
 	w             *git.Worktree
 	SSHKeyPath    string
-	Configuration Configuration
+	Configuration cfg.Configuration
 }
 
-func (gg *GoGit) SetConfiguration(configuration Configuration) {
+func (gg *GoGit) SetConfiguration(configuration cfg.Configuration) {
 	gg.Configuration = configuration
 }
 

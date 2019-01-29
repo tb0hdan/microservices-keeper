@@ -9,7 +9,15 @@ import (
 	"os/user"
 	"path"
 
+	"github.com/tb0hdan/microservices-keeper/repository/structs"
+
 	log "github.com/sirupsen/logrus" // nolint
+
+	cfg "github.com/tb0hdan/microservices-keeper/repository/configuration"
+	"github.com/tb0hdan/microservices-keeper/repository/output/ccd"
+	"github.com/tb0hdan/microservices-keeper/repository/output/git"
+	"github.com/tb0hdan/microservices-keeper/repository/runner"
+	"github.com/tb0hdan/microservices-keeper/repository/utils"
 )
 
 var (
@@ -27,7 +35,7 @@ func Run(bversion, buildID string) { // nolint
 		usr *user.User
 	)
 	// Flags are parsed inside NewConfiguration()
-	configuration := NewConfiguration()
+	configuration := cfg.NewConfiguration()
 	configuration.Init(flag.CommandLine)
 
 	if *version {
@@ -35,7 +43,7 @@ func Run(bversion, buildID string) { // nolint
 		if sname == "main" {
 			sname = "microservices-keeper"
 		}
-		fmt.Printf("%s version %s-%s\n", sname, bversion, buildID)
+		log.Printf("%s version %s-%s\n", sname, bversion, buildID)
 		os.Exit(1)
 	}
 
@@ -50,7 +58,7 @@ func Run(bversion, buildID string) { // nolint
 
 	// Populate SSH key
 	if *sshKey == "" {
-		*sshKey, err = findSSHKey()
+		*sshKey, err = utils.FindSSHKey()
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -98,5 +106,13 @@ func Run(bversion, buildID string) { // nolint
 		return *message, nil
 	}
 
-	RunWithAbstractGit(NewGit(*url, *directory, *sshKey), NewCCD(), configuration, msgfunc)
+	entity := &structs.RunnerEntity{
+		Git:             git.NewGit(*url, *directory, *sshKey),
+		CCD:             ccd.NewCCD(),
+		Configuration:   configuration,
+		MessageFunction: msgfunc,
+		Directory:       *directory,
+	}
+
+	runner.RunWithAbstractGit(entity)
 }
