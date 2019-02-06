@@ -1,3 +1,5 @@
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Ftb0hdan%2Fmicroservices-keeper.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Ftb0hdan%2Fmicroservices-keeper?ref=badge_shield)
+
 *microservices-keeper* is a tool to keep track of Code Change Decisions [CCD] as part of microservices maintenance.
 I've coined up this term after reading Michael Nygard's article - see [About](#about).
 Basically, it's works with git repository as a form of centralized storage,
@@ -65,3 +67,7 @@ Loosely based on following:
 - http://thinkrelevance.com/blog/2011/11/15/documenting-architecture-decisions
 - https://github.com/npryce/adr-tools
 
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Ftb0hdan%2Fmicroservices-keeper.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Ftb0hdan%2Fmicroservices-keeper?ref=badge_large)
