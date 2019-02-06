@@ -11,7 +11,7 @@ import (
 	"github.com/nlopes/slack/slackevents"
 )
 
-func RunEvents(config *SlackConfiguration) { // nolint
+func RunEvents(config *SlackConfiguration) (err2 error){ // nolint
 	// You more than likely want your "Bot User OAuth Access Token" which starts with "xoxb-"
 	var api = slack.New(config.APIToken)
 
@@ -59,8 +59,8 @@ func RunEvents(config *SlackConfiguration) { // nolint
 		}
 	})
 	log.Println("[INFO] Server listening")
-	if err := http.ListenAndServe(":3000", nil); err != nil {
-		log.Printf("HTTP listener error: %+v\n", err)
+	if err2 = http.ListenAndServe(":3000", nil); err2 != nil {
+		log.Printf("HTTP listener error: %+v\n", err2)
 	}
-
+	return err2
 }

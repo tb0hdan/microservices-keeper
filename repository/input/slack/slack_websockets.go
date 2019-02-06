@@ -1,7 +1,9 @@
 package input_slack // nolint
 
 import (
+	"fmt"
 	"os"
+	"strings"
 
 	log2 "log"
 
@@ -10,7 +12,7 @@ import (
 	log "github.com/sirupsen/logrus" // nolint
 )
 
-func RunWebsockets(config *SlackConfiguration) {
+func RunWebsockets(config *SlackConfiguration) (err error) { // nolint
 	api := slack.New(
 		config.APIToken,
 		slack.OptionDebug(true),
@@ -30,10 +32,24 @@ func RunWebsockets(config *SlackConfiguration) {
 			log.Println("Infos:", ev.Info)
 			log.Println("Connection counter:", ev.ConnectionCount)
 			// Replace C2147483705 with your Channel ID
-			rtm.SendMessage(rtm.NewOutgoingMessage("Hello world", "C2147483705"))
+			// rtm.SendMessage(rtm.NewOutgoingMessage("Hello world", "C2147483705"))
 
 		case *slack.MessageEvent:
 			log.Printf("Message: %v\n", ev)
+			msg := strings.Replace(ev.Text, "<!channel>", "@channel", 1)
+			// only @channel messages are processed
+			if !strings.HasPrefix(msg, "@channel") {
+				continue
+			}
+			// remove @channel
+			msg = strings.TrimPrefix(msg, "@channel ")
+			reply, err2 := config.MessageHandler(msg)
+			if err2 != nil {
+				reply = fmt.Sprintf("An error occured while storing message: %+v", err)
+				log.Printf(reply)
+
+			}
+			rtm.SendMessage(rtm.NewOutgoingMessage(reply, ev.Channel))
 
 		case *slack.PresenceChangeEvent:
 			log.Printf("Presence Change: %v\n", ev)
@@ -54,4 +70,5 @@ func RunWebsockets(config *SlackConfiguration) {
 			// log.Printf("Unexpected: %v\n", msg.Data)
 		}
 	}
+	return err
 }

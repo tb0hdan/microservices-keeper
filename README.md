@@ -33,6 +33,20 @@ or
 cat somebigmessage.txt|microservices-keeper --gituser yourGithubUser
 ```
 
+
+Slack integration
+------------
+
+Receiving slack messages (@channel message, where bot is added) using WebSockets:
+
+```sh
+microservices-keeper --slack-token xoxb-xxxx --slack-modes 10 --gituser yourGithubUser
+```
+
+
+
+
+
 Development
 ------------
 
