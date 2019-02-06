@@ -46,6 +46,12 @@ microservices-keeper --slack-token xoxb-xxxx --slack-modes 10 --gituser yourGith
 ```
 
 
+using Events API (typicall app_mention capability):
+
+```sh
+/microservices-keeper --slack-token xoxb-xxxx --slack-modes 01 --slack-verification-token RRxxxx --gituser yourGithubUser
+```
+
 
 
 

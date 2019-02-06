@@ -23,8 +23,9 @@ func RunEvents(config *SlackConfiguration) (err2 error){ // nolint
 		}
 		body := buf.String()
 		eventsAPIEvent, e := slackevents.ParseEvent(json.RawMessage(body),
-			slackevents.OptionVerifyToken(&slackevents.TokenComparator{VerificationToken: config.APIToken}))
+			slackevents.OptionVerifyToken(&slackevents.TokenComparator{VerificationToken: config.VerificationToken}))
 		if e != nil {
+			log.Printf("Verification failed with: %+v\n", e)
 			w.WriteHeader(http.StatusInternalServerError)
 		}
 
@@ -58,8 +59,9 @@ func RunEvents(config *SlackConfiguration) (err2 error){ // nolint
 			}
 		}
 	})
-	log.Println("[INFO] Server listening")
-	if err2 = http.ListenAndServe(":3000", nil); err2 != nil {
+	addr := ":3000"
+	log.Printf("[INFO] Server listening on addr: %s", addr)
+	if err2 = http.ListenAndServe(addr, nil); err2 != nil {
 		log.Printf("HTTP listener error: %+v\n", err2)
 	}
 	return err2

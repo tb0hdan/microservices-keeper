@@ -29,9 +29,10 @@ var (
 	message   = flag.String("message", "", "Message to add. Ignored when pipe is used.")
 	version   = flag.Bool("version", false, "Print version")
 	// slack
-	token    = flag.String("slack-token", "", "Slack Token")
-	modes    = flag.Int("slack-modes", 0, "Slack modes: 01 - Events, 10 - WebSockets, 11 - Both")
-	endpoint = flag.String("slack-endpoint", "/events-endpoint", "HTTP endpoint for Slack Events API")
+	token             = flag.String("slack-token", "", "Slack Bot user Token")
+	verificationToken = flag.String("slack-verification-token", "", "Slack verification token")
+	modes             = flag.Int("slack-modes", 0, "Slack modes: 01 - Events, 10 - WebSockets, 11 - Both")
+	endpoint          = flag.String("slack-endpoint", "/events-endpoint", "HTTP endpoint for Slack Events API")
 )
 
 func Run(bversion, buildID string) { // nolint
@@ -141,10 +142,11 @@ func Run(bversion, buildID string) { // nolint
 			return
 		}
 		slackCfg := &input_slack.SlackConfiguration{
-			APIToken:       *token,
-			Endpoint:       *endpoint,
-			MessageHandler: msgHandler,
-			Application:    nil,
+			APIToken:          *token,
+			Endpoint:          *endpoint,
+			MessageHandler:    msgHandler,
+			Application:       nil,
+			VerificationToken: *verificationToken,
 		}
 		input_slack.RunSlackLoop(slackCfg, *modes)
 	}
