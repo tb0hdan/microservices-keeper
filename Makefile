@@ -25,3 +25,10 @@ lint:
 
 update-version:
 	@printf "package main\n\nconst (\n\tVersion=\"$(VERSION)\"\n\tBuildID=\"$(BUILDID)\"\n)\n" > version.go
+	@gofmt -s -w version.go
+
+tag:
+	@git tag -a v$(VERSION) -m "v$(VERSION)"
+	@git push --tags
+
+release: update-version build tag

@@ -5,17 +5,18 @@ import (
 	"os"
 	"strings"
 
+	"github.com/tb0hdan/microservices-keeper/repository/logs"
+
 	log2 "log"
 
 	"github.com/nlopes/slack"
-
-	log "github.com/sirupsen/logrus" // nolint
 )
 
 func RunWebsockets(config *SlackConfiguration) (err error) { // nolint
 	api := slack.New(
 		config.APIToken,
 		slack.OptionDebug(true),
+		// FIXME: Switch to internal logs package instead
 		slack.OptionLog(log2.New(os.Stdout, "slack-bot: ", log2.Lshortfile|log2.LstdFlags)),
 	)
 
@@ -23,19 +24,19 @@ func RunWebsockets(config *SlackConfiguration) (err error) { // nolint
 	go rtm.ManageConnection()
 
 	for msg := range rtm.IncomingEvents {
-		log.Print("Event Received: ")
+		logs.Logger.Print("Event Received: ")
 		switch ev := msg.Data.(type) {
 		case *slack.HelloEvent:
 			// Ignore hello
 
 		case *slack.ConnectedEvent:
-			log.Println("Infos:", ev.Info)
-			log.Println("Connection counter:", ev.ConnectionCount)
+			logs.Logger.Println("Infos:", ev.Info)
+			logs.Logger.Println("Connection counter:", ev.ConnectionCount)
 			// Replace C2147483705 with your Channel ID
 			// rtm.SendMessage(rtm.NewOutgoingMessage("Hello world", "C2147483705"))
 
 		case *slack.MessageEvent:
-			log.Printf("Message: %v\n", ev)
+			logs.Logger.Printf("Message: %v\n", ev)
 			msg := strings.Replace(ev.Text, "<!channel>", "@channel", 1)
 			// only @channel messages are processed
 			if !strings.HasPrefix(msg, "@channel") {
@@ -46,22 +47,22 @@ func RunWebsockets(config *SlackConfiguration) (err error) { // nolint
 			reply, err2 := config.MessageHandler(msg)
 			if err2 != nil {
 				reply = fmt.Sprintf("An error occured while storing message: %+v", err)
-				log.Printf(reply)
+				logs.Logger.Printf(reply)
 
 			}
 			rtm.SendMessage(rtm.NewOutgoingMessage(reply, ev.Channel))
 
 		case *slack.PresenceChangeEvent:
-			log.Printf("Presence Change: %v\n", ev)
+			logs.Logger.Printf("Presence Change: %v\n", ev)
 
 		case *slack.LatencyReport:
-			log.Printf("Current latency: %v\n", ev.Value)
+			logs.Logger.Printf("Current latency: %v\n", ev.Value)
 
 		case *slack.RTMError:
-			log.Printf("Error: %s\n", ev.Error())
+			logs.Logger.Printf("Error: %s\n", ev.Error())
 
 		case *slack.InvalidAuthEvent:
-			log.Printf("Invalid credentials")
+			logs.Logger.Printf("Invalid credentials")
 			return
 
 		default:

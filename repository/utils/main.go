@@ -7,16 +7,16 @@ import (
 	"path/filepath"
 	"strings"
 
-	log "github.com/sirupsen/logrus" // nolint
+	"github.com/tb0hdan/microservices-keeper/repository/logs"
 )
 
 func EnsureDir(name string) {
 	_, err := os.Open(name)
 	if os.IsNotExist(err) {
-		log.Println("Making dir", name)
+		logs.Logger.Println("Making dir", name)
 		err = os.MkdirAll(name, os.ModePerm)
 		if err != nil {
-			log.Fatalf("an error occured while running os.MkdirAll(): %+v\n", err)
+			logs.Logger.Fatalf("an error occured while running os.MkdirAll(): %+v\n", err)
 		}
 	}
 }

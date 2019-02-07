@@ -10,12 +10,12 @@ import (
 	"path"
 
 	"github.com/tb0hdan/microservices-keeper/repository/input/slack" // nolint
+	"github.com/tb0hdan/microservices-keeper/repository/input/trello"
+	"github.com/tb0hdan/microservices-keeper/repository/logs"
 	"github.com/tb0hdan/microservices-keeper/repository/output/ccd"
 	"github.com/tb0hdan/microservices-keeper/repository/output/git"
 	"github.com/tb0hdan/microservices-keeper/repository/runner"
 	"github.com/tb0hdan/microservices-keeper/repository/structs"
-
-	log "github.com/sirupsen/logrus" // nolint
 
 	cfg "github.com/tb0hdan/microservices-keeper/repository/configuration"
 	"github.com/tb0hdan/microservices-keeper/repository/utils"
@@ -28,11 +28,15 @@ var (
 	gitUser   = flag.String("gituser", "", "Git user. Defaults to currently logged in one.")
 	message   = flag.String("message", "", "Message to add. Ignored when pipe is used.")
 	version   = flag.Bool("version", false, "Print version")
+	debug     = flag.Bool("debug", false, "Enable debugging")
 	// slack
 	token             = flag.String("slack-token", "", "Slack Bot user Token")
 	verificationToken = flag.String("slack-verification-token", "", "Slack verification token")
 	modes             = flag.Int("slack-modes", 0, "Slack modes: 01 - Events, 10 - WebSockets, 11 - Both")
 	endpoint          = flag.String("slack-endpoint", "/events-endpoint", "HTTP endpoint for Slack Events API")
+	// trello
+	trelloToken = flag.String("trello-token", "", "Trello token")
+	trelloKey   = flag.String("trello-key", "", "Trello key")
 )
 
 func Run(bversion, buildID string) { // nolint
@@ -44,12 +48,17 @@ func Run(bversion, buildID string) { // nolint
 	configuration := cfg.NewConfiguration()
 	configuration.Init(flag.CommandLine)
 
+	// Configure logger first
+	if *debug {
+		logs.SetDebug()
+	}
+
 	if *version {
 		sname := path.Base(os.Args[0])
 		if sname == "main" {
 			sname = "microservices-keeper"
 		}
-		log.Printf("%s version %s-%s\n", sname, bversion, buildID)
+		logs.Logger.Printf("%s version %s-%s\n", sname, bversion, buildID)
 		os.Exit(1)
 	}
 
@@ -66,14 +75,14 @@ func Run(bversion, buildID string) { // nolint
 	if *sshKey == "" {
 		*sshKey, err = utils.FindSSHKey()
 		if err != nil {
-			log.Fatal(err)
+			logs.Logger.Fatal(err)
 		}
 	}
 
 	if *gitUser == "" {
 		usr, err = user.Current()
 		if err != nil {
-			log.Fatalf("could not get current user: %+v\n", err)
+			logs.Logger.Fatalf("could not get current user: %+v\n", err)
 		}
 		*gitUser = usr.Name
 	}
@@ -104,11 +113,12 @@ func Run(bversion, buildID string) { // nolint
 		*message = string(output)
 	}
 
-	if *message == "" && *token == "" {
-		log.Fatal("At least one of [message|token] is required")
+	if *message == "" && *token == "" && *trelloKey == "" && *trelloToken == "" {
+		logs.Logger.Fatal("At least one of [message|token] or trello-key,trello-token is required")
 	}
 
-	if *token == "" {
+	// FIXME: Rewrite this to switch or something...
+	if *token == "" { // nolint
 		msgfunc := func() (string, error) {
 			return *message, nil
 		}
@@ -122,7 +132,8 @@ func Run(bversion, buildID string) { // nolint
 		}
 
 		runner.RunWithAbstractGit(entity)
-	} else {
+	} else if *trelloToken == "" && *trelloKey == "" {
+		// Slack
 		msgHandler := func(msg string) (r string, err error) {
 
 			msgfunc := func() (string, error) {
@@ -149,6 +160,33 @@ func Run(bversion, buildID string) { // nolint
 			VerificationToken: *verificationToken,
 		}
 		input_slack.RunSlackLoop(slackCfg, *modes)
+	} else if *trelloKey != "" && *trelloToken != "" {
+		// Trello
+		msgHandler := func(msg string) (r string, err error) {
+
+			msgfunc := func() (string, error) {
+				return msg, nil
+			}
+
+			entity := &structs.RunnerEntity{
+				Git:             git.NewGit(*url, *directory, *sshKey),
+				CCD:             ccd.NewCCD(),
+				Configuration:   configuration,
+				MessageFunction: msgfunc,
+				Directory:       *directory,
+			}
+
+			runner.RunWithAbstractGit(entity)
+
+			return
+		}
+
+		trelloCfg := &input_trello.TrelloConfiguration{
+			APIKey:         *trelloKey,
+			Token:          *trelloToken,
+			MessageHandler: msgHandler,
+		}
+		input_trello.RunTrello(trelloCfg)
 	}
 
 }

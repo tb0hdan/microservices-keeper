@@ -3,7 +3,7 @@ package input_slack // nolint
 import (
 	"fmt"
 
-	log "github.com/sirupsen/logrus" // nolint
+	"github.com/tb0hdan/microservices-keeper/repository/logs"
 )
 
 const (
@@ -18,12 +18,12 @@ func RunSlackLoop(config *SlackConfiguration, modes int) {
 	case SlackEvents:
 		fmt.Println("Running Slack Events...")
 		if err := RunEvents(config); err != nil {
-			log.Fatalf("%+v", err)
+			logs.Logger.Fatalf("%+v", err)
 		}
 	case SlackWebsockets:
 		fmt.Println("Running slack websockets...")
 		if err := RunWebsockets(config); err != nil {
-			log.Fatalf("%+v", err)
+			logs.Logger.Fatalf("%+v", err)
 		}
 	case SlackEvents | SlackWebsockets:
 		fmt.Println("Running events and websockets...")
@@ -35,13 +35,13 @@ func RunSlackLoop(config *SlackConfiguration, modes int) {
 		}()
 		select {
 		case err1 := <-c1:
-			log.Fatalf("RunEvents failed with: %+v", err1)
+			logs.Logger.Fatalf("RunEvents failed with: %+v", err1)
 		case err2 := <-c2:
-			log.Fatalf("RunWebsockets failed with: %+v", err2)
+			logs.Logger.Fatalf("RunWebsockets failed with: %+v", err2)
 		}
 
 	default:
-		log.Fatalf("Unkwown mode: %d", modes)
+		logs.Logger.Fatalf("Unkwown mode: %d", modes)
 	}
 
 }

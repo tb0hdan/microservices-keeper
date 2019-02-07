@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/sirupsen/logrus" // nolint
+	"github.com/tb0hdan/microservices-keeper/repository/logs"
 )
 
 const (
@@ -29,7 +29,7 @@ type CCD struct {
 func (c *CCD) ReadCCDs(directory string) (ccds []string) {
 	files, err := ioutil.ReadDir(directory)
 	if err != nil {
-		log.Fatal(err)
+		logs.Logger.Fatal(err)
 	}
 
 	for _, f := range files {
@@ -65,7 +65,7 @@ func (c *CCD) CreateCCD(text, dpath string) (name string, err error) {
 
 		lastCCDID, err = strconv.ParseInt(strings.Split(lastCCD, "-")[0], 10, 64)
 		if err != nil {
-			log.Fatal(err)
+			logs.Logger.Fatal(err)
 		}
 	}
 	maxWords := len(words)
