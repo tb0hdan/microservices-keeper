@@ -26,6 +26,8 @@ lint:
 update-version:
 	@printf "package main\n\nconst (\n\tVersion=\"$(VERSION)\"\n\tBuildID=\"$(BUILDID)\"\n)\n" > version.go
 	@gofmt -s -w version.go
+	@git commit -a -m "Version bump"
+	@git push
 
 tag:
 	@git tag -a v$(VERSION) -m "v$(VERSION)"
