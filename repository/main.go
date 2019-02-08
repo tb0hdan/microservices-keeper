@@ -10,6 +10,7 @@ import (
 	"path"
 
 	"github.com/tb0hdan/microservices-keeper/repository/input/slack" // nolint
+	"github.com/tb0hdan/microservices-keeper/repository/input/stdin"
 	"github.com/tb0hdan/microservices-keeper/repository/input/trello"
 	"github.com/tb0hdan/microservices-keeper/repository/logs"
 	"github.com/tb0hdan/microservices-keeper/repository/output/ccd"
@@ -116,11 +117,11 @@ func Run(bversion, buildID string) { // nolint
 	if *message == "" && *token == "" && *trelloKey == "" && *trelloToken == "" {
 		logs.Logger.Fatal("At least one of [message|token] or trello-key,trello-token is required")
 	}
+	// msgHandler is the same for all runners
+	msgHandler := func(msg string) (r string, err error) {
 
-	// FIXME: Rewrite this to switch or something...
-	if *token == "" { // nolint
 		msgfunc := func() (string, error) {
-			return *message, nil
+			return msg, nil
 		}
 
 		entity := &structs.RunnerEntity{
@@ -132,26 +133,18 @@ func Run(bversion, buildID string) { // nolint
 		}
 
 		runner.RunWithAbstractGit(entity)
+
+		return
+	}
+
+	// FIXME: Rewrite this to switch or something...
+	if *token == "" { // nolint
+		// Standard input
+		stdinCfg := &input_stdin.STDInConfiguration{MessageHandler: msgHandler, Message: *message}
+		input_stdin.RunSTDIn(stdinCfg)
+
 	} else if *trelloToken == "" && *trelloKey == "" {
 		// Slack
-		msgHandler := func(msg string) (r string, err error) {
-
-			msgfunc := func() (string, error) {
-				return msg, nil
-			}
-
-			entity := &structs.RunnerEntity{
-				Git:             git.NewGit(*url, *directory, *sshKey),
-				CCD:             ccd.NewCCD(),
-				Configuration:   configuration,
-				MessageFunction: msgfunc,
-				Directory:       *directory,
-			}
-
-			runner.RunWithAbstractGit(entity)
-
-			return
-		}
 		slackCfg := &input_slack.SlackConfiguration{
 			APIToken:          *token,
 			Endpoint:          *endpoint,
@@ -160,27 +153,9 @@ func Run(bversion, buildID string) { // nolint
 			VerificationToken: *verificationToken,
 		}
 		input_slack.RunSlackLoop(slackCfg, *modes)
+
 	} else if *trelloKey != "" && *trelloToken != "" {
 		// Trello
-		msgHandler := func(msg string) (r string, err error) {
-
-			msgfunc := func() (string, error) {
-				return msg, nil
-			}
-
-			entity := &structs.RunnerEntity{
-				Git:             git.NewGit(*url, *directory, *sshKey),
-				CCD:             ccd.NewCCD(),
-				Configuration:   configuration,
-				MessageFunction: msgfunc,
-				Directory:       *directory,
-			}
-
-			runner.RunWithAbstractGit(entity)
-
-			return
-		}
-
 		trelloCfg := &input_trello.TrelloConfiguration{
 			APIKey:         *trelloKey,
 			Token:          *trelloToken,

@@ -2,22 +2,18 @@ package input_slack // nolint
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
-	"github.com/tb0hdan/microservices-keeper/repository/logs"
-
-	log2 "log"
-
 	"github.com/nlopes/slack"
+
+	"github.com/tb0hdan/microservices-keeper/repository/logs"
 )
 
 func RunWebsockets(config *SlackConfiguration) (err error) { // nolint
 	api := slack.New(
 		config.APIToken,
-		slack.OptionDebug(true),
-		// FIXME: Switch to internal logs package instead
-		slack.OptionLog(log2.New(os.Stdout, "slack-bot: ", log2.Lshortfile|log2.LstdFlags)),
+		slack.OptionDebug(logs.GetDebug()),
+		slack.OptionLog(logs.NewSlackLogger()),
 	)
 
 	rtm := api.NewRTM()

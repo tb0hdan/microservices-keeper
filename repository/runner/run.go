@@ -53,9 +53,18 @@ func RunWithAbstractGit(entity *structs.RunnerEntity) { // nolint
 	}
 
 	err = entity.Git.PullAll()
-	if err != nil && err.Error() != "already up-to-date" {
-		log.Fatalf("an error occured while running mygit.PullAll(): %+v\n", err)
+	if err != nil {
+		switch err.Error() {
+		case "non-fast-forward update":
+			// there's a commit, run `git push`
+			entity.Git.Push()
+		case "already up-to-date":
+			log.Println("Already up to date")
+		default:
+			log.Fatalf("an error occured while running mygit.PullAll(): %+v\n", err)
+		}
 	}
+
 	err = entity.Git.AddAllFiles()
 	if err != nil {
 		log.Fatalf("an error occured while running mygit.AddAllFiles(): %+v\n", err)

@@ -1,6 +1,6 @@
 .PHONY: doc
 
-VERSION="0.1.0"
+VERSION=$(shell cat ./VERSION)
 BUILDID=$(shell git rev-parse --short HEAD)
 
 all: build
